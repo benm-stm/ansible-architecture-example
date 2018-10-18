@@ -1,0 +1,11 @@
+---
+# tasks file for common
+
+- name: Install ntp packages
+  package:
+    name: "{{ item.name }}"
+    state: present
+  with_items:
+    - "{{ ntp.packages }}"
+  tags: 
+    - install-ntp-package

@@ -1,0 +1,5 @@
+---
+- hosts: project1-data
+  remote_user: root
+  roles:
+    - role: project1-data

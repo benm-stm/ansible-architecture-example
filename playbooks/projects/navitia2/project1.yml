@@ -1,0 +1,17 @@
+---
+
+- hosts: jormun
+  remote_user: root
+  tasks:
+    - name: "{{ ansible_tags }} {{ component }} project1"
+      import_role:
+         name: part1
+      when: component == "part1" or component == "all"
+    
+- hosts: kraken 
+  remote_user: root
+  tasks:
+    - name: "{{ mode }} {{ component }} project1"
+      import_role:
+         name: part2
+      when: component == "part2" or component == "all"             

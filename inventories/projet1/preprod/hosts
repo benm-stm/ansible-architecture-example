@@ -1,0 +1,10 @@
+[projet1:children]
+projet1-data
+projet1-web
+
+[projet1-data]
+projet1-data[1:3]
+
+[projet1-web]
+projet1-ws
+projet1-apache

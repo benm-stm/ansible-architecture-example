@@ -1,0 +1,8 @@
+---
+# tasks file for ntp
+
+- import_tasks: install.yml
+
+- import_tasks: configure.yml
+  tags:
+    - configure

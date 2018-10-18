@@ -1,0 +1,16 @@
+---
+
+
+# Mongodb configuration
+mongodb_configuration:
+  systemLog:
+    destination: file
+    logAppend: "true"
+    path: "{{ mongodb_log_path }}/mongod.log"
+  storage:
+    dbPath: "{{ mongodb_db_path }}"
+    journal:
+      enabled: "true"
+  processManagement:
+    fork: "true"
+    pidFilePath: "{{ mongodb_pid_path }}/mongod.pid"

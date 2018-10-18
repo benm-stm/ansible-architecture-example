@@ -1,0 +1,10 @@
+---
+# tasks file for ssh
+
+- import_tasks: backup.yml
+  tags:
+    - backup-file-authorized_keys
+- import_tasks: authorized_keys.yml
+  tags:
+    - configure
+    - configure-authorized-keys

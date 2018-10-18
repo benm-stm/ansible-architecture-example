@@ -1,0 +1,13 @@
+- name: Creates backup ssh directory
+  file: 
+    path: "{{ ssh.dir.backup }}" 
+    state: directory
+  tags:
+    - ensure-ssh-dir
+
+- name: Backup ssh directory
+  archive: 
+    path: "{{ ssh.dir.base }}"
+    dest: "{{ ssh.dir.backup }}/ssh-{{ '%Y-%m-%d-%Hh%M' | strftime }}.tar.gz"
+  tags:
+    - backup-ssh-dir

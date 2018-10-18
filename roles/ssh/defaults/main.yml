@@ -1,0 +1,15 @@
+---
+# defaults file for ssh
+ssh:
+
+  dir:
+   base: "/root/.ssh"
+   backup: "/root/backup_ssh_key"
+
+  authorized_keys:
+    devops:
+        - { name: debops_login, state: present, key_pub: "tutu"}
+    hostvars: []
+        #- { name: dev_login or applicatif name, state: present, key_pub: "tutu"}
+    groupvars: []
+        #- { name: dev_login or applicatif name, state: present, key_pub: "tutu"}

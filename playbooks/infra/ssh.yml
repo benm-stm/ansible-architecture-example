@@ -1,0 +1,9 @@
+
+- hosts: "{{ target }}"
+  remote_user: root
+  gather_facts: no
+  strategy: free
+  tasks:
+    - name: "Install and configure ssh"
+      import_role:
+         name: ssh

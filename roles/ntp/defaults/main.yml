@@ -1,0 +1,23 @@
+---
+# defaults file for ntp
+
+ntp: 
+
+  user: "root"
+  group: "root"
+
+  file: 
+    config: "/etc/ntp.conf"
+    log: "/var/log/ntpd.log"
+
+  packages:
+    - name: ntp
+    - name: ntpdate
+
+  settings:
+    - name: ntp1.canaltp.prod
+      server: "ntp1.canaltp.prod"
+      option: "iburst"
+    - name: ntp2.canaltp.prod
+      server: "ntp2.canaltp.prod"
+      option: "iburst"

@@ -1,0 +1,15 @@
+---
+# tasks file for common
+
+- name: Configure "{{ ntp.file.config }}"
+  template:
+    src: "ntp.conf.j2"
+    dest: "{{ ntp.file.config }}" 
+    owner: "{{ ntp.user }}"
+    group: "{{ ntp.group }}"
+    mode : 0644
+  notify:
+    - restart ntp
+  when: ansible_os_family == "Debian"
+  tags: 
+    - configure-ntp

@@ -1,0 +1,176 @@
+@Library('jenkins_libraries@master') _ 
+
+pipeline {
+    agent { label 'ansible-slave-2.6.0' }
+
+    parameters {
+        choice(choices: ['project1', 'project2', 'project3', 'all'], description: 'What is the project?', name: 'project')
+        choice(choices: ['int', 'preprod', 'prod', 'all'], description: 'What is the environment?', name: 'environment')
+        choice(choices: ['devops', 'hostvars', 'groupvars'], description: 'What is the category un der ssh?', name: 'category')
+        booleanParam(defaultValue: true, description: 'launch the playbook in dry-run mode', name: 'isCheck')
+        choice(choices: ['', '-v', '-vv', '-vvv'], description: 'verbosity', name: 'verbosity')
+        text(name: 'ssh_keys_add', description: "format:\nuser:public_key",defaultValue:"")
+        text(name: 'ssh_keys_remove', description: 'Remove ssh keys by specifying the name the users in each line',defaultValue:"")
+    }
+    /*environment {
+        SSH_LIB = load "jenkins/generic_config/add_remove_ssh_authoryzed_keys/utils.groovy"
+    }*/
+    stages{
+        stage('clone repo') { 
+            steps{
+                git branch: 'master',
+                credentialsId: '2fe68721-aa97-4560-9886-c6950fdfdb85',
+                url: 'git@github.com:CanalTP/ansible.git'
+            }
+        }
+        stage('target (Group_var) selection') {
+           steps{
+               script {
+                   env.inventories_array = utils.getFileNamesListUnderPath("inventories/${env.project}/${env.environment}/group_vars/", ".yml", true)
+                   env.target = input(
+                                    id: 'target', message: 'choose a target',
+                                    parameters: [
+                                        choice(choices: inventories_array,
+                                                description: 'targets listle',
+                                                name: 'target')
+                                    ]
+                                )
+                }
+            }
+        }
+      
+        stage('Add keys to env vars') {
+            when{
+               expression { env.ssh_keys_add != "" }
+            }
+            steps{
+                script{
+                    def SSH_LIB = load "jenkins/generic_config/add_remove_ssh_authoryzed_keys/utils.groovy"
+                    env.operation = "Add"
+                    def yaml = readYaml file:"inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml"
+                    def keys_list = yaml.ssh.authorized_keys."${env.category}"
+                    def entries = "${env.ssh_keys_add}".readLines()
+                    def entry
+                      
+                    //iterate on entries given as params by the user
+                    entries.each {
+                        entry = SSH_LIB.check_and_split_entry(it)
+                        //delete entries when the pair name/key exists
+                        yaml = SSH_LIB.delete_entries_if_exists(yaml, keys_list, env.category, entry)
+                        SSH_LIB.append_key_entry(yaml, entry)
+                    }
+                    //write to yml
+                    SSH_LIB.writeYml(yaml, "inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml")
+                }
+            }
+        }
+        stage('Change keys state to absent (to be removed)') {
+            when{
+                expression { env.ssh_keys_remove != "" }
+            }
+            steps{
+                script{
+                    def SSH_LIB = load "jenkins/generic_config/add_remove_ssh_authoryzed_keys/utils.groovy"
+                    def yaml = readYaml file:"inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml"
+                    env.operation = (env.operation == null) ? "Remove": env.operation + "/Remove"
+                    def entries = "${env.ssh_keys_remove}".readLines()
+                    def keys_list = yaml.ssh.authorized_keys."${env.category}"
+
+                    entries.each { name ->
+                        SSH_LIB.change_key_state_to_absent(yaml, keys_list, category, name) 
+                    }
+                    //write to yml
+                    SSH_LIB.writeYml(yaml, "inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml")
+                }
+            }
+        }
+        stage('Job description') {
+            steps{
+                script {
+                    currentBuild.displayName = "Project: ${env.project}"
+                    currentBuild.description = "Env: ${env.environment}\nTarget: ${env.target}\nOperation: ${env.operation} Key"
+                }
+            }
+        }
+        stage('Run ansible') {
+            steps{
+                script {
+                    def check = ""
+                    if( Boolean.parseBoolean(env.isCheck) )
+                        check = "--check"
+                    try {
+                        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+                          //sh "export ANSIBLE_FORCE_COLOR=true; ansible-playbook -i inventories/${env.project}/${env.environment}/hosts playbooks/infra/ssh.yml -e \"target=${env.target}\" ${check} ${env.verbosity}"
+                            ansiblePlaybook( 
+                                playbook: 'playbooks/infra/ssh.yml',
+                                inventory: "inventories/${env.project}/${env.environment}/hosts", 
+                                credentialsId: '532456be-f794-477f-a335-8b7d3a6c1b14',
+                                extraVars: [
+                                    target: "${env.target}"
+                                ],
+                                colorized: true,
+                                extras: "${env.verbosity} ${check}"
+                            )
+                        }
+                    } catch (err) {
+                        currentBuild.description += "\nAnsible: Erros Found"
+                    }
+                }
+            }
+        }
+       
+        stage('Remove keys from groupvars') {
+            when{
+                expression { env.ssh_keys_remove != "" }
+            }
+            steps{
+                script{
+                    def SSH_LIB = load "jenkins/generic_config/add_remove_ssh_authoryzed_keys/utils.groovy"
+                    def yaml = readYaml file:"inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml"
+                    def keys_list = yaml.ssh.authorized_keys."${env.category}"
+                    SSH_LIB.delete_entries_if_state_is_absent(yaml, keys_list)
+                    //write to yml
+                    SSH_LIB.writeYml(yaml, "inventories/${env.project}/${env.environment}/group_vars/${env.target}.yml")
+                }
+            }
+        }
+        stage('push changes to git') {
+            when { 
+                expression { !Boolean.parseBoolean(env.isCheck)}
+            }
+            steps{
+                script {
+                   try{
+                        gitUtils.gitPushChanges(BUILD_NUMBER, 'jenkins', 'jenkins.devops@kisio.fr', 'Ssh keys update')
+                    } catch(e) {
+                       currentBuild.description += "\nGit: No updates commited"
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'One way or another, I have finished'
+            deleteDir() /* clean up our workspace */
+        }
+        success {
+            echo 'I succeeeded!'
+            script {
+                //mailUtils.sendMessageDeclarative('SUCCESS', 'benmansour_rafik@yahoo.fr', 'build succeeded')
+            }
+        }
+        unstable {
+            echo 'I am unstable :/'
+        }
+        failure {
+            echo 'I failed :('
+            script {
+                //mailUtils.sendMessageDeclarative('FAILURE', 'benmansour_rafik@yahoo.fr', 'build failed')
+            }
+        }
+        changed {
+            echo 'Things were different before...'
+        }
+    }
+}

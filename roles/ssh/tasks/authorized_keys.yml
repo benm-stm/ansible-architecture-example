@@ -1,0 +1,25 @@
+- name: Set authorized key in alternate location
+  ignore_errors: true
+  authorized_key:
+    user: root 
+    state: present
+    key: "{{ item.key_pub }}"
+    manage_dir: False
+  with_items: 
+    - "{{ ssh.authorized_keys.devops }}"
+    - "{{ ssh.authorized_keys.hostvars }}"
+    - "{{ ssh.authorized_keys.groupvars }}"
+  when: item.state == 'present'
+
+- name: Unset authorized key in alternate location
+  ignore_errors: true
+  authorized_key:
+    user: root 
+    state: absent 
+    key: "{{ item.key_pub }}"
+    manage_dir: False
+  with_items: 
+    - "{{ ssh.authorized_keys.devops }}"
+    - "{{ ssh.authorized_keys.hostvars }}"
+    - "{{ ssh.authorized_keys.groupvars }}"
+  when: item.state == 'absent'

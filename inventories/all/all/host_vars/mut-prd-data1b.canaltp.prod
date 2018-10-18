@@ -1,0 +1,3 @@
+---
+
+postgresql_hot_standby: "on"

@@ -1,0 +1,19 @@
+---
+
+postgresql_listen_addresses:
+  - "*"
+postgresql_checkpoint_segments: 128
+postgresql_shared_buffers: 4096
+postgresql_wal_level: "hot_standby"
+postgresql_max_wal_senders: 3
+postgresql_max_connections: 200
+postgresql_pg_hba_default:
+  - { type: local, database: all, user: '{{ postgresql_admin_user }}', address: '', method: '{{ postgresql_peer_auth_method }}', comment: '' }
+  - { type: local, database: all, user: all, address: '',             method: '{{ postgresql_peer_auth_method }}', comment: '"local" is for Unix domain socket connections only' }
+  - { type: host,  database: all, user: all, address: '127.0.0.1/32', method: '{{ postgresql_md5_auth_method }}', comment: 'IPv4 local connections:' }
+  - { type: host,  database: all, user: all, address: '::1/128',      method: '{{ postgresql_md5_auth_method }}', comment: 'IPv6 local connections:' }
+  - { type: host,  database: replication, user: '{{ postgresql_replicator_user }}', address: all,      method: '{{ postgresql_default_auth_method }}', comment: 'Allow replication connections from localhost, by a user with the replication privilege' }
+  - { type: host,  database: all, user: all, address: '10.0.0.0/8',      method: '{{ postgresql_md5_auth_method }}', comment: 'For internal network' }
+  - { type: host,  database: all, user: all, address: '10.93.0.0/16',      method: '{{ postgresql_md5_auth_method }}', comment: 'For prod network' }
+
+postgresql_backup_dir: "/tmp/monrepertor"
