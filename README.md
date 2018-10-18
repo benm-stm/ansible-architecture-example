@@ -1,5 +1,5 @@
 # ansible-architecture-example
-a small ansible architecture example to automate tasks
+a small ansible architecture example to automate tasks (and some best practices)
 
 this repo is shipped with a jenkins pipeline file in the jenkins repo which permit to deploy ssh_key in the destination machines
 
