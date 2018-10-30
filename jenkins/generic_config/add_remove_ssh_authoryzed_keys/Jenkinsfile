@@ -4,8 +4,8 @@ pipeline {
     agent { label 'ansible-slave-2.6.0' }
 
     parameters {
-        choice(choices: ['project1', 'project2', 'project3', 'all'], description: 'What is the project?', name: 'project')
-        choice(choices: ['int', 'preprod', 'prod', 'all'], description: 'What is the environment?', name: 'environment')
+        choice(choices: ['nav2', 'traffic_report', 'nmp', 'nmm', 'tft2', 'all'], description: 'What is the project?', name: 'project')
+        choice(choices: ['lab', 'int', 'rec', 'pre', 'prd', 'all'], description: 'What is the environment?', name: 'environment')
         choice(choices: ['devops', 'hostvars', 'groupvars'], description: 'What is the category un der ssh?', name: 'category')
         booleanParam(defaultValue: true, description: 'launch the playbook in dry-run mode', name: 'isCheck')
         choice(choices: ['', '-v', '-vv', '-vvv'], description: 'verbosity', name: 'verbosity')
@@ -152,22 +152,22 @@ pipeline {
     post {
         always {
             echo 'One way or another, I have finished'
-            deleteDir() /* clean up our workspace */
+            //deleteDir() /* clean up our workspace */
         }
         success {
             echo 'I succeeeded!'
-            script {
+            //script {
                 //mailUtils.sendMessageDeclarative('SUCCESS', 'benmansour_rafik@yahoo.fr', 'build succeeded')
-            }
+            //}
         }
         unstable {
             echo 'I am unstable :/'
         }
         failure {
             echo 'I failed :('
-            script {
+            //script {
                 //mailUtils.sendMessageDeclarative('FAILURE', 'benmansour_rafik@yahoo.fr', 'build failed')
-            }
+            //}
         }
         changed {
             echo 'Things were different before...'
