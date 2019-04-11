@@ -1,4 +1,4 @@
-# Lnsible-architecture-example
+# Ansible-architecture-example
 a small ansible architecture example to automate tasks (and some best practices)
 
 ## On how does it consist
