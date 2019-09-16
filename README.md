@@ -6,7 +6,8 @@ this repo is shipped with a jenkinsfile (in the jenkins folder) which deploys ss
 some part are missing which are the jenkins config, the docker image for ansible 2.6.0 which must be declared in the jenkins conf as a node
 
 ## what's important
-My opinion is to split the repo to 3 part 
+My opinion is to split the repo to 3 parts:
+
 1- inventory
 2- roles
 3- playbooks
