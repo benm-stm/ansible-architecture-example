@@ -9,7 +9,9 @@ some part are missing which are the jenkins config, the docker image for ansible
 My opinion is to split the repo to 3 parts:
 
 1- inventory
+
 2- roles
+
 3- playbooks
 
 create git repo for ansible and link the above 3 repos as sub-modules
